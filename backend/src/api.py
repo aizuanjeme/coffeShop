@@ -78,21 +78,21 @@ def get_drinks_details(jwt):
 @requires_auth('post:drinks')
 def add_drinks(jwt):
 
-    info = request.get_json()
-    title = info.get('title')
-    recipe = json.dumps(info.get('recipe'))
+    data = request.json
+    title = data.get('title')
+    recipe = json.dumps(data.get('recipe'))
 
-    if 'title' and 'recipe' not in info:
-        abort(422)
+    if not (title and recipe):
+        return abort(422)
 
     try:
-        drink = Drink(title=title, recipe=recipe)
-        drink.insert()
-        print([drink.long()])
+        drinks = Drink(title=title, recipe=recipe)
+        drinks.insert()
+        drink = drinks.long()
 
         return jsonify({
             'success': True,
-            'drinks': drink.long()
+            'drinks': drink
         })
     except:
         abort(422)
@@ -113,18 +113,26 @@ def add_drinks(jwt):
 @requires_auth('patch:drinks')
 def edit_drink_menu(jwt, id):
 
-    data = request.get_json()
-    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    # data = request.get_json()
+    edittable_drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if not edittable_drink:
+        return abort(404)
+    
+    data = request.json
+    title = data.get('title')
+    recipe = json.dumps(data.get('recipe'))
 
-    if 'title' not in data:
-        abort(422)
+    if not (title and recipe):
+        return abort(422)
 
-    drink.title = data['title']
-    drink.update()
+    edittable_drink.title = title
+    edittable_drink.recipe = recipe
+    edittable_drink.update()
+    drink = [edittable_drink.long()]
 
     return jsonify({
         'sucess': True,
-        'drinks': [drink.long()]
+        'drinks': drink
     })
 
 '''
@@ -228,6 +236,14 @@ def internal_server_error(error):
     error handler should conform to general task above
 '''
 
+@app.errorhandler(AuthError)
+def auth_error(auth):
+    return jsonify({
+        "success": False,
+        "error": auth.status_code,
+        "message": auth.error
+    }), auth.status_code
+    
 if __name__ == "__main__":
     app.debug = True
     app.run()
