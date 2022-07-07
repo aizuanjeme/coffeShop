@@ -28,6 +28,8 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks')
 @cross_origin()
 def get_drinks():
@@ -37,6 +39,7 @@ def get_drinks():
         'drinks': [drink.short() for drink in drinks]
     }), 200
 
+
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -45,6 +48,8 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks-detail')
 @cross_origin()
 @requires_auth('get:drinks-detail')
@@ -55,6 +60,7 @@ def get_drinks_details(jwt):
         'drinks': [drink.long() for drink in drinks]
     }), 200
 
+
 '''
 @TODO implement endpoint
     POST /drinks
@@ -64,28 +70,31 @@ def get_drinks_details(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def add_drinks(jwt):
-    
-        info = request.get_json()
-        title = info.get('title')
-        recipe = json.dumps(info.get('recipe'))
 
-        if 'title' and 'recipe' not in info:
-            abort(422)
+    info = request.get_json()
+    title = info.get('title')
+    recipe = json.dumps(info.get('recipe'))
 
-        try:
-            drink = Drink(title=title, recipe=recipe)
-            drink.insert()
-            print([drink.long()])
+    if 'title' and 'recipe' not in info:
+        abort(422)
 
-            return jsonify({
-                'success': True,
-                'drinks': drink.long()
-            })
-        except:
-            abort(422)
+    try:
+        drink = Drink(title=title, recipe=recipe)
+        drink.insert()
+        print([drink.long()])
+
+        return jsonify({
+            'success': True,
+            'drinks': drink.long()
+        })
+    except:
+        abort(422)
+
 
 '''
 @TODO implement endpoint
@@ -98,7 +107,23 @@ def add_drinks(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def edit_drink_menu(jwt, id):
 
+    data = request.get_json()
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+
+    if 'title' not in data:
+        abort(422)
+
+    drink.title = data['title']
+    drink.update()
+
+    return jsonify({
+        'sucess': True,
+        'drinks': [drink.long()]
+    })
 
 '''
 @TODO implement endpoint
@@ -110,6 +135,21 @@ def add_drinks(jwt):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drink(jwt, id):
+    # print(jwt)
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if drink is None:
+        abort(404)
+
+    drink.delete()
+    return jsonify({
+        'success': True,
+        "delete": id
+    })
 
 
 # Error Handling
