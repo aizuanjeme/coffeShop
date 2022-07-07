@@ -33,10 +33,11 @@ CORS(app)
 @app.route('/drinks')
 @cross_origin()
 def get_drinks():
-    drinks = Drink.query.all()
+    all_drinks = Drink.query.all()
+    drinks = [drink.short() for drink in all_drinks]
     return jsonify({
         'success': True,
-        'drinks': [drink.short() for drink in drinks]
+        'drinks': drinks
     }), 200
 
 
@@ -54,10 +55,11 @@ def get_drinks():
 @cross_origin()
 @requires_auth('get:drinks-detail')
 def get_drinks_details(jwt):
-    drinks = Drink.query.all()
+    all_drinks = Drink.query.all()
+    drinks = [drink.long() for drink in all_drinks]
     return jsonify({
         'success': True,
-        'drinks': [drink.long() for drink in drinks]
+        'drinks': drinks
     }), 200
 
 
