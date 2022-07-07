@@ -11,13 +11,18 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+@app.after_request
+def after_request(response):
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorizations,true')
+        response.headers.add('Access-Control-Allow-Methods','GET,PUT,POST,DELETE,OPTIONS')
+        return response
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this function will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
 '''
@@ -112,8 +117,7 @@ def add_drinks(jwt):
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
 def edit_drink_menu(jwt, id):
-
-    # data = request.get_json()
+    
     edittable_drink = Drink.query.filter(Drink.id == id).one_or_none()
     if not edittable_drink:
         return abort(404)
