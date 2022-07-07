@@ -167,7 +167,6 @@ def delete_drink(jwt, id):
 Example error handling for unprocessable entity
 '''
 
-
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
